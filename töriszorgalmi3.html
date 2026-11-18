@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birodalmak Kora: Ultimate Kiadás</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f3e5ab;
+            --wood-dark: #14100d;
+            --wood-panel: #211914;
+            --parchment: #d4c3a3;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #14100d;
+            color: #f5ebd6;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-imperial {
+            font-family: 'Cinzel', Georgia, serif;
+        }
+
+        /* Egyedi görgetősáv */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a130f;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5c4938;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d4af37;
+        }
+
+        /* Történelmi keretek és gombok */
+        .imperial-panel {
+            background: linear-gradient(145deg, #241b15 0%, #17110d 100%);
+            border: 1px solid #5c4938;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(212, 175, 55, 0.15);
+        }
+
+        .imperial-border-gold {
+            border: 2px solid #d4af37;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.18);
+        }
+
+        .btn-imperial {
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-imperial:hover:not(:disabled) {
+            transform: translateY(-1px);
+            filter: brightness(1.14);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+        }
+        .btn-imperial:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .btn-imperial:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        /* Kártya animációk */
+        .card-item {
+            transition: all 0.22s ease;
+        }
+        .card-item:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.65), 0 0 12px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Toast animáció */
+        @keyframes slideInRight {
+            from { transform: translateX(110%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast-enter {
+            animation: slideInRight 0.28s ease-out forwards;
+        }
+        .toast-exit {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+
+        canvas {
+            display: block;
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- TOAST ÉRTESÍTÉSI KONTÉNER -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- 1. FŐMENÜ KÉPERNYŐ -->
+    <div id="main-menu" class="min-h-screen flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_center,_#2b2018_0%,_#110d0a_100%)]">
+        <div class="imperial-panel imperial-border-gold rounded-2xl max-w-xl w-full p-8 sm:p-10 text-center relative">
+            <div class="text-4xl sm:text-5xl mb-2">🏛️</div>
+            <h1 class="font-imperial text-2xl sm:text-4xl font-extrabold tracking-wider text-[#e6c27a] drop-shadow-md mb-2">
+                BIRODALMAK KORA: ULTIMATE
+            </h1>
+            <p class="text-sm sm:text-base italic text-[#b5a48b] mb-8">
+                Európai stratégia, haditanács kártyák, fegyverszünetek és diplomácia
+            </p>
+
+            <div class="flex flex-col gap-3.5 max-w-xs mx-auto">
+                <button onclick="game.startGame('ai')" class="btn-imperial bg-gradient-to-r from-[#214d2d] to-[#2d693e] border border-[#4a9c60]/40 text-white font-bold py-3.5 px-6 rounded-xl text-base shadow-lg flex items-center justify-center gap-2.5">
+                    <span>🤖</span> Játék AI Ellen
+                </button>
+                <button onclick="game.startGame('2p')" class="btn-imperial bg-gradient-to-r from-[#1a4369] to-[#255c8f] border border-[#498bc7]/40 text-white font-bold py-3.5 px-6 rounded-xl text-base shadow-lg flex items-center justify-center gap-2.5">
+                    <span>👥</span> 2 Játékos Párbaj
+                </button>
+                <button onclick="ui.openModal('rules-modal')" class="btn-imperial bg-gradient-to-r from-[#572d56] to-[#733c72] border border-[#a85ea6]/40 text-white font-bold py-3.5 px-6 rounded-xl text-base shadow-lg flex items-center justify-center gap-2.5">
+                    <span>📖</span> Szabályok
+                </button>
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-[#5c4938]/50 text-xs text-[#8c7a65]">
+                15 Európai Régió • 16 Történelmi Kártya • Körökre Osztott Hódítás
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. JÁTÉK FELÜLET -->
+    <div id="game-screen" class="hidden min-h-screen flex flex-col">
+        <!-- FELSŐ ÁLLAPOTSOR -->
+        <header class="bg-[#1a130f] border-b border-[#5c4938] px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-md">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+                <span id="lbl-kor" class="font-imperial font-bold text-sm sm:text-base text-[#e6c27a] bg-[#291f18] px-3 py-1 rounded-lg border border-[#5c4938]">
+                    1. KÖR (Fegyverszünet)
+                </span>
+                <span id="lbl-soron" class="font-bold text-sm sm:text-base px-2.5 py-1 rounded-lg bg-[#241b15]">
+                    Soron van: 1. Játékos
+                </span>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold">
+                    <span id="lbl-arany" class="text-[#ffd700] bg-[#292214] px-2.5 py-1 rounded-lg border border-[#ffd700]/30">
+                        💰 Kincstár: 6
+                    </span>
+                    <span id="lbl-befolyas" class="text-[#00e676] bg-[#14291e] px-2.5 py-1 rounded-lg border border-[#00e676]/30">
+                        🌟 Befolyás: 0
+                    </span>
+                    <span id="lbl-hoditas" class="text-rose-300 bg-[#2d1518] px-2.5 py-1 rounded-lg border border-rose-400/30" title="Egy körben legfeljebb 3 terület foglalható el">
+                        ⚔️ Hódítás: 0/3
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span id="lbl-utasitas" class="hidden xl:inline-block text-xs italic text-[#73b1e1] mr-2">
+                    1. kör: Fegyverszünet (Támadni tilos)
+                </span>
+                <button onclick="ui.showStats()" class="btn-imperial bg-[#334654] hover:bg-[#41596b] text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/10">
+                    📊 Statisztika
+                </button>
+                <button onclick="ui.confirmMainMenu()" class="btn-imperial bg-[#5c4a38] hover:bg-[#735d47] text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/10">
+                    ⌂ Főmenü
+                </button>
+            </div>
+        </header>
+
+        <!-- KÖZÉPSŐ RÉSZ: TÉRKÉP + VEZÉRLŐPULT -->
+        <main class="flex-1 flex flex-col lg:flex-row gap-3 p-3 overflow-hidden">
+            <!-- BAL OLDAL: INTERAKTÍV EURÓPA TÉRKÉP -->
+            <div class="flex-1 flex flex-col min-h-[380px] sm:min-h-[480px] lg:min-h-0">
+                <div id="canvas-wrapper" class="relative flex-1 bg-[#1e293b] rounded-xl imperial-border-gold overflow-hidden shadow-2xl">
+                    <canvas id="map-canvas"></canvas>
+                    <!-- Szabotázs célzó banner -->
+                    <div id="sabotage-banner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 bg-[#4d265e] border-2 border-[#d4af37] text-white px-4 py-2 rounded-xl shadow-xl text-xs sm:text-sm font-bold flex items-center gap-3 z-10">
+                        <span id="sabotage-text">💥 Kattints egy ellenséges területre a szabotázshoz!</span>
+                        <button onclick="game.cancelSabotage()" class="bg-black/40 hover:bg-black/60 px-2 py-0.5 rounded text-xs">Mégse</button>
+                    </div>
+                    <!-- Mobil/Alsó tipp sáv a térképen -->
+                    <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center pointer-events-none text-[11px] text-amber-100/80 bg-black/50 backdrop-blur-xs px-3 py-1 rounded-lg">
+                        <span id="mobile-hint">Kattints egy saját területre a kiválasztáshoz!</span>
+                        <span id="lbl-terulet-stat" class="font-bold">🔵 8 | 🔴 7 (Összesen: 15)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JOBB OLDAL: PARANCSNOKI PANEL ÉS NAPLÓ -->
+            <aside class="w-full lg:w-[370px] xl:w-[400px] imperial-panel rounded-xl p-3.5 flex flex-col gap-2.5 shrink-0">
+                <div id="lbl-kivalasztott" class="text-center font-imperial font-bold text-sm sm:text-base text-[#f5ebd6] bg-[#14100d] py-2 px-3 rounded-lg border border-[#5c4938]">
+                    📍 Kiválasztva: Nincs
+                </div>
+
+                <!-- AKCIÓGOMBOK -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
+                    <button id="btn-toboroz" onclick="game.recruit()" class="btn-imperial bg-[#2e5939] text-white font-bold text-xs sm:text-sm py-2.5 px-3 rounded-lg text-left flex items-center justify-between">
+                        <span>🪖 Toborzás (+1 egység)</span>
+                        <span class="bg-black/30 px-2 py-0.5 rounded text-amber-300 text-xs">2 💰</span>
+                    </button>
+
+                    <button id="btn-huzas" onclick="game.drawCard()" class="btn-imperial bg-[#4a3869] text-white font-bold text-xs sm:text-sm py-2.5 px-3 rounded-lg text-left flex items-center justify-between">
+                        <span>🃏 Haditanács kártya húzása</span>
+                        <span class="bg-black/30 px-2 py-0.5 rounded text-amber-300 text-xs">3 💰</span>
+                    </button>
+
+                    <button id="btn-diplomacia" onclick="game.requestTruce()" class="btn-imperial bg-[#225577] text-white font-bold text-xs sm:text-sm py-2.5 px-3 rounded-lg text-left flex items-center justify-between">
+                        <span>🕊️ Fegyverszünet kérése</span>
+                        <span class="bg-black/30 px-2 py-0.5 rounded text-sky-200 text-xs">Béke</span>
+                    </button>
+
+                    <button id="btn-tamogatas" onclick="game.giftGold()" class="btn-imperial bg-[#8c6b20] text-white font-bold text-xs sm:text-sm py-2.5 px-3 rounded-lg text-left flex items-center justify-between">
+                        <span>💎 Arany ajándékozása (3 💰)</span>
+                        <span class="bg-black/30 px-2 py-0.5 rounded text-emerald-300 text-xs">+2 🌟</span>
+                    </button>
+
+                    <button id="btn-atadas" onclick="game.openTransferModal()" class="btn-imperial bg-[#775522] text-white font-bold text-xs sm:text-sm py-2.5 px-3 rounded-lg text-left flex items-center justify-between sm:col-span-2 lg:col-span-1">
+                        <span>🤝 Terület / Sereg átadása</span>
+                        <span class="bg-black/30 px-2 py-0.5 rounded text-emerald-300 text-xs">+1/+3 🌟</span>
+                    </button>
+                </div>
+
+                <button id="btn-kov-kor" onclick="game.endTurn()" class="btn-imperial bg-gradient-to-r from-[#8c4a20] to-[#a85825] border border-[#e6c27a]/40 text-white font-bold text-sm py-2.5 px-4 rounded-lg shadow-md mt-0.5">
+                    ⏳ Kör befejezése és átadás
+                </button>
+
+                <!-- ESEMÉNYNAPLÓ -->
+                <div class="flex-1 flex flex-col min-h-[140px] lg:min-h-[160px] mt-1">
+                    <div class="text-xs font-imperial font-bold text-[#e6c27a] mb-1 flex items-center justify-between">
+                        <span>📜 ESEMÉNYNAPLÓ</span>
+                        <span class="text-[10px] font-sans font-normal text-[#8c7a65]">Legújabb alul</span>
+                    </div>
+                    <div id="log-box" class="flex-1 bg-[#120e0b] border border-[#5c4938]/80 rounded-lg p-2.5 overflow-y-auto font-mono text-xs text-[#e6dcc8] space-y-2 max-h-[210px] lg:max-h-none"></div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- ALSÓ SÁV: HADITANÁCS KÁRTYÁK -->
+        <footer class="bg-[#1a130f] border-t border-[#5c4938] px-3 sm:px-5 py-2.5">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-imperial font-bold text-xs sm:text-sm text-[#e6c27a]">
+                    🎴 HADITANÁCS KÁRTYÁID (Max. 4):
+                </span>
+                <span id="lbl-active-buffs" class="text-xs font-semibold text-amber-300"></span>
+            </div>
+            <div id="cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 min-h-[82px]">
+                <!-- Kártyák dinamikusan ide kerülnek -->
+            </div>
+        </footer>
+    </div>
+
+    <!-- 3. KÖRVÁLTÁS ÁTFEDÉS (2 JÁTÉKOS MÓDBAN) -->
+    <div id="handoff-overlay" class="hidden fixed inset-0 z-40 bg-[#14100d]/98 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="imperial-panel imperial-border-gold rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
+            <div class="text-4xl mb-3">⏳</div>
+            <h2 class="font-imperial text-2xl font-bold text-[#d4af37] mb-3">KÖRVÁLTÁS</h2>
+            <p class="text-sm text-[#b5a48b] mb-2">A kártyák elrejtve a tisztességes játék érdekében.</p>
+            <p class="text-base text-[#f5ebd6] mb-1">Add át az irányítást:</p>
+            <div id="handoff-player-name" class="text-xl font-bold mb-6 py-2 px-4 rounded-xl bg-black/40 border border-white/10">
+                2. Játékos
+            </div>
+            <button onclick="game.completeHandoff()" class="btn-imperial w-full bg-gradient-to-r from-[#1f4e78] to-[#2a699c] text-white font-bold py-3.5 px-6 rounded-xl text-base shadow-lg">
+                Készen állok — Hadművelet ▶
+            </button>
+        </div>
+    </div>
+
+    <!-- 4. MODÁLIS ABLAKOK -->
+    <!-- Szabályok Modal -->
+    <div id="rules-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="imperial-panel imperial-border-gold rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="font-imperial text-xl sm:text-2xl font-bold text-[#e6c27a] mb-4 flex items-center gap-2">
+                <span>📖</span> Játékszabályok
+            </h3>
+            <div class="space-y-3 text-sm text-[#e6dcc8] leading-relaxed">
+                <p><strong class="text-[#e6c27a]">1. 🗺️ Térkép és Hódítás:</strong> 15 európai régió áll rendelkezésre. Kattints egy saját területedre, majd egy szomszédos ellenséges területre a támadáshoz (legalább 2 egység szükséges a támadáshoz).</p>
+                <p><strong class="text-[#e6c27a]">2. ⚔️ Körönkénti Hódítási Limit (Max. 3):</strong> Egy körben egy játékos (és az AI is) legfeljebb <strong>3 új területet</strong> foglalhat el, így az utánpótlási vonalak nem nyúlnak túl.</p>
+                <p><strong class="text-[#e6c27a]">3. 🛡️ 1. Köri Fegyverszünet:</strong> Az első körben kötelező fegyverszünet van érvényben — mindenki csak toborozhat és készülhet a háborúra.</p>
+                <p><strong class="text-[#e6c27a]">4. 🎲 Csatarendszer:</strong> Támadó erő = (forrás egységek - 1) + kockadobás (1–6) + támadó kártya bónusz. Védekező erő = célpont egységek + kockadobás (1–6) + automatikus védekező kártya bónusz.</p>
+                <p><strong class="text-[#e6c27a]">5. 🎴 Haditanács Kártyák:</strong> 3 aranyért húzhatsz (max. 4 kártya lehet nálad). A védekező kártyák (Csillagerőd, Téli hadjárat, Partizán ellenállás) automatikusan aktiválódnak, ha megtámadnak!</p>
+                <p><strong class="text-[#e6c27a]">6. 🌟 Diplomácia és Befolyás:</strong> Arany ajándékozásával, fegyverszünettel vagy terület/sereg átadásával <em>Befolyás pontokat</em> szerezhetsz, amelyek minden kör elején extra arany kamatot hoznak!</p>
+                <p><strong class="text-[#e6c27a]">7. 🏆 Győzelem:</strong> Hódítsd meg mind a 15 európai régiót!</p>
+            </div>
+            <div class="mt-6 text-right">
+                <button onclick="ui.closeModal('rules-modal')" class="btn-imperial bg-[#265432] text-white font-bold px-6 py-2.5 rounded-xl">
+                    Rendben
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statisztika Modal -->
+    <div id="stats-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="imperial-panel imperial-border-gold rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 id="stats-title" class="font-imperial text-xl font-bold text-[#e6c27a] mb-4">
+                📊 Birodalmi Statisztika
+            </h3>
+            <div id="stats-body" class="space-y-4 text-sm"></div>
+            <div class="mt-6 text-right">
+                <button onclick="ui.closeModal('stats-modal')" class="btn-imperial bg-[#3b4d59] text-white font-bold px-6 py-2 rounded-xl">
+                    Bezárás
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terület / Sereg Átadás Modal -->
+    <div id="transfer-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="imperial-panel imperial-border-gold rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="font-imperial text-xl font-bold text-[#e6c27a] mb-2">
+                🤝 Diplomáciai Átadás
+            </h3>
+            <p id="transfer-desc" class="text-sm text-[#d4c3a3] mb-5">
+                Válaszd ki, mit szeretnél tenni a kijelölt területtel:
+            </p>
+            <div class="flex flex-col gap-3">
+                <button onclick="game.executeTransfer('territory')" class="btn-imperial bg-[#775522] text-white font-bold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                    <span>🏳️ Teljes terület átadása az ellenfélnek</span>
+                    <span class="bg-black/40 px-2 py-0.5 rounded text-emerald-300 text-xs">+3 🌟</span>
+                </button>
+                <button onclick="game.executeTransfer('troop')" class="btn-imperial bg-[#2e5939] text-white font-bold py-3 px-4 rounded-xl text-left flex items-center justify-between">
+                    <span>🪖 1 egység küldése szomszédos területre</span>
+                    <span class="bg-black/40 px-2 py-0.5 rounded text-emerald-300 text-xs">+1 🌟</span>
+                </button>
+                <button onclick="ui.closeModal('transfer-modal')" class="btn-imperial bg-[#332922] text-[#b5a48b] font-semibold py-2.5 px-4 rounded-xl mt-1">
+                    Mégse
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Megerősítő Modal (Főmenü / Ajándékozás / Fegyverszünet) -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="imperial-panel imperial-border-gold rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 id="confirm-title" class="font-imperial text-xl font-bold text-[#e6c27a] mb-2">Megerősítés</h3>
+            <p id="confirm-text" class="text-sm text-[#e6dcc8] mb-6 leading-relaxed"></p>
+            <div class="flex justify-end gap-3">
+                <button onclick="ui.closeModal('confirm-modal')" class="btn-imperial bg-[#332922] text-[#d4c3a3] font-semibold px-4 py-2 rounded-xl">
+                    Mégse
+                </button>
+                <button id="confirm-yes-btn" class="btn-imperial bg-[#265432] text-white font-bold px-5 py-2 rounded-xl">
+                    Igen, elfogadom
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Győzelmi Képernyő Modal -->
+    <div id="victory-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="imperial-panel imperial-border-gold rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
+            <div class="text-5xl mb-3">🏆👑🏆</div>
+            <h2 class="font-imperial text-2xl sm:text-3xl font-extrabold text-[#e6c27a] mb-2">
+                DICSŐSÉGES GYŐZELEM!
+            </h2>
+            <p id="victory-text" class="text-base text-[#f5ebd6] mb-6 leading-relaxed">
+                Meghódítottad mind a 15 európai régiót!
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="game.restartCurrentMode()" class="btn-imperial bg-[#265432] text-white font-bold py-3 px-5 rounded-xl">
+                    🔄 Új játék
+                </button>
+                <button onclick="game.returnToMenu()" class="btn-imperial bg-[#5c4a38] text-white font-bold py-3 px-5 rounded-xl">
+                    ⌂ Főmenü
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 16 TÖRTÉNELMI KÁRTYA ====================
+        const KARTYA_PAKLI = [
+            { nev: "Napóleoni roham", tipus: "tamadas", bonusz: 4, ikon: "⚔️", leiras: "+4 támadóerő a következő csatában!" },
+            { nev: "Tüzérségi sortűz", tipus: "tamadas", bonusz: 3, ikon: "💣", leiras: "+3 támadóerő a következő csatában!" },
+            { nev: "Ostromágyúk", tipus: "tamadas", bonusz: 3, ikon: "🔥", leiras: "+3 támadóerő a következő csatában!" },
+            { nev: "Lovassági bekerítés", tipus: "tamadas", bonusz: 2, ikon: "🐎", leiras: "+2 támadóerő a következő csatában!" },
+
+            { nev: "Csillagerőd", tipus: "vedekezes", bonusz: 4, ikon: "🏰", leiras: "+4 védelem (automatikus védekezéskor)." },
+            { nev: "Téli hadjárat", tipus: "vedekezes", bonusz: 3, ikon: "❄️", leiras: "+3 védelem (automatikus védekezéskor)." },
+            { nev: "Partizán ellenállás", tipus: "vedekezes", bonusz: 2, ikon: "🌲", leiras: "+2 védelem (automatikus védekezéskor)." },
+
+            { nev: "Ipari forradalom", tipus: "gazdasag", bonusz: 6, ikon: "⚙️", leiras: "Azonnal +6 aranyat kapsz a kincstárba!" },
+            { nev: "Gyarmati kereskedelem", tipus: "gazdasag", bonusz: 4, ikon: "⛵", leiras: "Azonnal +4 aranyat kapsz!" },
+            { nev: "Különleges hadiadó", tipus: "gazdasag", bonusz: 5, ikon: "💰", leiras: "Azonnal +5 aranyat kapsz!" },
+
+            { nev: "Királyi Gárda", tipus: "toborzas", bonusz: 4, ikon: "👑", leiras: "+4 elit egység a kiválasztott területre!" },
+            { nev: "Zsoldos sereg", tipus: "toborzas", bonusz: 3, ikon: "🪖", leiras: "+3 egység a kiválasztott területre!" },
+            { nev: "Általános sorozás", tipus: "tomeges_toborzas", bonusz: 1, ikon: "📯", leiras: "+1 egység MINDEN saját területedre!" },
+
+            { nev: "Lőporraktár robbantás", tipus: "szabotazs", bonusz: 3, ikon: "💥", leiras: "-3 egység egy ellenséges területen!" },
+            { nev: "Kémhálózat", tipus: "szabotazs", bonusz: 2, ikon: "🕵️", leiras: "-2 egység egy ellenséges területen!" },
+            { nev: "Erőltetett menet", tipus: "mozgas", bonusz: 2, ikon: "🥾", leiras: "+2 egység a területre és +1 támadás!" }
+        ];
+
+        // ==================== 15 EURÓPAI RÉGIÓ ====================
+        const TERULETEK_ALAP = {
+            "Írország":           { x: 100, y: 150, szomszedok: ["Brit-szigetek"], bevetel: 1 },
+            "Brit-szigetek":      { x: 180, y: 140, szomszedok: ["Írország", "Németalföld", "Franciaország", "Skandinávia"], bevetel: 3 },
+            "Portugália":         { x: 80,  y: 400, szomszedok: ["Spanyolország"], bevetel: 1 },
+            "Spanyolország":      { x: 140, y: 390, szomszedok: ["Portugália", "Franciaország", "Itália"], bevetel: 2 },
+            "Franciaország":      { x: 260, y: 270, szomszedok: ["Brit-szigetek", "Spanyolország", "Németalföld", "Poroszország", "Itália"], bevetel: 3 },
+            "Németalföld":        { x: 290, y: 180, szomszedok: ["Brit-szigetek", "Franciaország", "Poroszország"], bevetel: 2 },
+            "Skandinávia":        { x: 420, y: 70,  szomszedok: ["Brit-szigetek", "Poroszország", "Orosz Birodalom"], bevetel: 2 },
+            "Poroszország":       { x: 410, y: 185, szomszedok: ["Skandinávia", "Németalföld", "Franciaország", "Lengyelország", "Habsburg Birodalom"], bevetel: 3 },
+            "Lengyelország":      { x: 540, y: 175, szomszedok: ["Poroszország", "Habsburg Birodalom", "Orosz Birodalom", "Ukrajna"], bevetel: 2 },
+            "Itália":             { x: 370, y: 370, szomszedok: ["Spanyolország", "Franciaország", "Habsburg Birodalom", "Balkán"], bevetel: 2 },
+            "Habsburg Birodalom": { x: 500, y: 285, szomszedok: ["Poroszország", "Lengyelország", "Itália", "Balkán", "Orosz Birodalom"], bevetel: 3 },
+            "Balkán":             { x: 580, y: 380, szomszedok: ["Itália", "Habsburg Birodalom", "Oszmán Birodalom"], bevetel: 2 },
+            "Ukrajna":            { x: 670, y: 220, szomszedok: ["Lengyelország", "Orosz Birodalom", "Oszmán Birodalom"], bevetel: 2 },
+            "Orosz Birodalom":    { x: 720, y: 120, szomszedok: ["Skandinávia", "Poroszország", "Lengyelország", "Habsburg Birodalom", "Ukrajna", "Oszmán Birodalom"], bevetel: 4 },
+            "Oszmán Birodalom":   { x: 680, y: 390, szomszedok: ["Balkán", "Habsburg Birodalom", "Ukrajna", "Orosz Birodalom"], bevetel: 3 }
+        };
+
+        // ==================== UI KEZELŐ (MODÁLOK ÉS TOASTOK) ====================
+        const ui = {
+            toast(message, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                
+                const styles = {
+                    info: 'bg-[#1f2937] border-[#60a5fa] text-blue-100',
+                    success: 'bg-[#143321] border-[#34d399] text-emerald-100',
+                    warning: 'bg-[#3b2712] border-[#fbbf24] text-amber-100',
+                    error: 'bg-[#3f1518] border-[#f87171] text-red-100'
+                };
+
+                toast.className = `toast-enter pointer-events-auto border-l-4 ${styles[type] || styles.info} px-4 py-3 rounded-lg shadow-2xl text-xs sm:text-sm font-medium backdrop-blur-md`;
+                toast.textContent = message;
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.remove('toast-enter');
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3200);
+            },
+
+            openModal(id) {
+                document.getElementById(id).classList.remove('hidden');
+            },
+
+            closeModal(id) {
+                document.getElementById(id).classList.add('hidden');
+            },
+
+            confirm(title, text, onConfirm) {
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-text').textContent = text;
+                const yesBtn = document.getElementById('confirm-yes-btn');
+                
+                // Eseménykezelő frissítése klónozással
+                const newBtn = yesBtn.cloneNode(true);
+                yesBtn.parentNode.replaceChild(newBtn, yesBtn);
+                
+                newBtn.addEventListener('click', () => {
+                    this.closeModal('confirm-modal');
+                    onConfirm();
+                });
+
+                this.openModal('confirm-modal');
+            },
+
+            confirmMainMenu() {
+                this.confirm(
+                    "Vissza a főmenübe",
+                    "Biztosan kilépsz az aktuális hadjáratból? A jelenlegi állás elvész.",
+                    () => game.returnToMenu()
+                );
+            },
+
+            showStats() {
+                const j1 = game.j1;
+                const j2 = game.j2;
+                const teruletek = Object.values(game.teruletek);
+
+                const j1Ter = teruletek.filter(t => t.tulaj === j1).length;
+                const j2Ter = teruletek.filter(t => t.tulaj === j2).length;
+                const j1Sereg = teruletek.filter(t => t.tulaj === j1).reduce((s, t) => s + t.egysegek, 0);
+                const j2Sereg = teruletek.filter(t => t.tulaj === j2).reduce((s, t) => s + t.egysegek, 0);
+
+                document.getElementById('stats-title').textContent = `📊 Birodalmi Statisztika (${game.kor}. kör)`;
+                document.getElementById('stats-body').innerHTML = `
+                    <div class="bg-[#17253b] border border-blue-500/40 rounded-xl p-4">
+                        <div class="font-bold text-blue-300 text-base mb-1">🔵 ${j1.nev}</div>
+                        <div class="grid grid-cols-3 gap-2 text-xs sm:text-sm text-blue-100 mt-2">
+                            <div class="bg-black/30 p-2 rounded-lg text-center">
+                                <div class="text-blue-400 text-xs">Területek</div>
+                                <div class="font-bold text-base">${j1Ter} / 15</div>
+                            </div>
+                            <div class="bg-black/30 p-2 rounded-lg text-center">
+                                <div class="text-blue-400 text-xs">Seregek</div>
+                                <div class="font-bold text-base">🪖 ${j1Sereg}</div>
+                            </div>
+                            <div class="bg-black/30 p-2 rounded-lg text-center">
+                                <div class="text-blue-400 text-xs">Befolyás</div>
+                                <div class="font-bold text-base">🌟 ${j1.befolyasPont}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#381818] border border-red-500/40 rounded-xl p-4">
+                        <div class="font-bold text-red-300 text-base mb-1">🔴 ${j2.nev}</div>
+                        <div class="grid grid-cols-3 gap-2 text-xs sm:text-sm text-red-100 mt-2">
+                            <div class="bg-black/30 p-2 rounded-lg text-center">
+                                <div class="text-red-400 text-xs">Területek</div>
+                                <div class="font-bold text-base">${j2Ter} / 15</div>
+                            </div>
+                            <div class="bg-black/30 p-2 rounded-lg text-center">
+                                <div class="text-red-400 text-xs">Seregek</div>
+                                <div class="font-bold text-base">🪖 ${j2Sereg}</div>
+                            </div>
+                            <div class="bg-black/30 p-2 rounded-lg text-center">
+                                <div class="text-red-400 text-xs">Befolyás</div>
+                                <div class="font-bold text-base">🌟 ${j2.befolyasPont}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                this.openModal('stats-modal');
+            }
+        };
+
+        // ==================== JÁTÉKMOTOR ====================
+        class BirodalmakGame {
+            constructor() {
+                this.jatekMod = 'ai';
+                this.j1 = null;
+                this.j2 = null;
+                this.jatekosok = [];
+                this.aktualisJatekos = null;
+                this.teruletek = {};
+                this.kivalasztottTerulet = null;
+                this.hoveredTerulet = null;
+                this.fegyverszunetAktiv = false;
+                this.kor = 1;
+                this.aiFolyamatban = false;
+                this.pendingSabotageCardIdx = null;
+                this.elfoglaltTeruletekEbbenAKorben = 0;
+                this.maxHoditasKoronkent = 3;
+
+                // Canvas inicializálása és animációs állapotok
+                this.canvas = document.getElementById('map-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.baseWidth = 850;
+                this.baseHeight = 520;
+                this.scale = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+
+                this.animTime = 0;
+                this.particles = [];
+                this.ripples = [];
+                this.parchmentPattern = null;
+
+                this.createParchmentTexture();
+                this.setupEvents();
+                this.startAnimationLoop();
+            }
+
+            createParchmentTexture() {
+                // Finom antik pergamen szemcsézettség generálása offscreen canvas-on
+                const off = document.createElement('canvas');
+                off.width = 128;
+                off.height = 128;
+                const octx = off.getContext('2d');
+                octx.fillStyle = '#d9c7a3';
+                octx.fillRect(0, 0, 128, 128);
+
+                for (let i = 0; i < 900; i++) {
+                    const x = Math.random() * 128;
+                    const y = Math.random() * 128;
+                    const alpha = Math.random() * 0.06;
+                    octx.fillStyle = Math.random() > 0.5 ? `rgba(92, 68, 42, ${alpha})` : `rgba(255, 248, 230, ${alpha})`;
+                    octx.fillRect(x, y, 2, 2);
+                }
+                this.parchmentPattern = this.ctx.createPattern(off, 'repeat');
+            }
+
+            startAnimationLoop() {
+                let lastTime = performance.now();
+                const loop = (now) => {
+                    const dt = Math.min(0.05, (now - lastTime) / 1000);
+                    lastTime = now;
+                    this.animTime += dt;
+
+                    // Részecskék és lökéshullámok frissítése
+                    this.updateEffects(dt);
+
+                    if (!document.getElementById('game-screen').classList.contains('hidden')) {
+                        this.drawMap();
+                    }
+                    requestAnimationFrame(loop);
+                };
+                requestAnimationFrame(loop);
+            }
+
+            spawnBattleEffect(vx, vy, type = 'battle') {
+                const count = type === 'sabotage' ? 28 : 22;
+                const colors = type === 'sabotage'
+                    ? ['#c084fc', '#f59e0b', '#ef4444', '#fef08a']
+                    : ['#fbbf24', '#ef4444', '#ffffff', '#f97316'];
+
+                for (let i = 0; i < count; i++) {
+                    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+                    const speed = 35 + Math.random() * 95;
+                    this.particles.push({
+                        x: vx,
+                        y: vy,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.0,
+                        decay: 1.4 + Math.random() * 0.8,
+                        size: 2.5 + Math.random() * 3.5,
+                        color: colors[Math.floor(Math.random() * colors.length)]
+                    });
+                }
+
+                this.ripples.push({
+                    x: vx,
+                    y: vy,
+                    radius: 18,
+                    maxRadius: 72,
+                    alpha: 0.9,
+                    color: type === 'sabotage' ? '#c084fc' : '#f59e0b'
+                });
+            }
+
+            updateEffects(dt) {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vx *= 0.94;
+                    p.vy *= 0.94;
+                    p.life -= p.decay * dt;
+                    if (p.life <= 0) this.particles.splice(i, 1);
+                }
+
+                for (let i = this.ripples.length - 1; i >= 0; i--) {
+                    const r = this.ripples[i];
+                    r.radius += 75 * dt;
+                    r.alpha -= 1.2 * dt;
+                    if (r.alpha <= 0 || r.radius >= r.maxRadius) this.ripples.splice(i, 1);
+                }
+            }
+
+            setupEvents() {
+                window.addEventListener('resize', () => {
+                    if (!document.getElementById('game-screen').classList.contains('hidden')) {
+                        this.resizeCanvas();
+                        this.drawMap();
+                    }
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.aktualisJatekos?.isAi || this.aiFolyamatban) {
+                        this.hoveredTerulet = null;
+                        this.canvas.style.cursor = 'default';
+                        return;
+                    }
+                    const rect = this.canvas.getBoundingClientRect();
+                    const vx = (e.clientX - rect.left - this.offsetX) / this.scale;
+                    const vy = (e.clientY - rect.top - this.offsetY) / this.scale;
+
+                    let found = null;
+                    for (const [nev, adat] of Object.entries(this.teruletek)) {
+                        if (Math.hypot(vx - adat.x, vy - adat.y) <= 35) {
+                            found = nev;
+                            break;
+                        }
+                    }
+                    this.hoveredTerulet = found;
+                    this.canvas.style.cursor = found ? 'pointer' : 'default';
+                });
+
+                this.canvas.addEventListener('mouseleave', () => {
+                    this.hoveredTerulet = null;
+                    this.canvas.style.cursor = 'default';
+                });
+
+                this.canvas.addEventListener('click', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const clickY = e.clientY - rect.top;
+                    this.handleMapClick(clickX, clickY);
+                });
+            }
+
+            resizeCanvas() {
+                const wrapper = document.getElementById('canvas-wrapper');
+                if (!wrapper) return;
+                const rect = wrapper.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+                this.canvas.style.width = `${rect.width}px`;
+                this.canvas.style.height = `${rect.height}px`;
+
+                this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+                this.ctx.scale(dpr, dpr);
+
+                const scaleX = rect.width / this.baseWidth;
+                const scaleY = rect.height / this.baseHeight;
+                this.scale = Math.min(scaleX, scaleY) * 0.94;
+                this.offsetX = (rect.width - this.baseWidth * this.scale) / 2;
+                this.offsetY = (rect.height - this.baseHeight * this.scale) / 2;
+            }
+
+            startGame(mod) {
+                this.jatekMod = mod;
+                this.j1 = {
+                    nev: "1. Játékos (Francia Birodalom)",
+                    rovidNev: "1. Játékos",
+                    szin: "#2563eb",
+                    vilagosSzin: "#93c5fd",
+                    isAi: false,
+                    arany: 6,
+                    kartyak: [],
+                    aktivTamadoBonusz: 0,
+                    befolyasPont: 0
+                };
+
+                if (mod === 'ai') {
+                    this.j2 = {
+                        nev: "Orosz-Koalíciós AI",
+                        rovidNev: "Koalíció AI",
+                        szin: "#dc2626",
+                        vilagosSzin: "#fca5a5",
+                        isAi: true,
+                        arany: 6,
+                        kartyak: [],
+                        aktivTamadoBonusz: 0,
+                        befolyasPont: 0
+                    };
+                } else {
+                    this.j2 = {
+                        nev: "2. Játékos (Koalíciós Birodalom)",
+                        rovidNev: "2. Játékos",
+                        szin: "#dc2626",
+                        vilagosSzin: "#fca5a5",
+                        isAi: false,
+                        arany: 6,
+                        kartyak: [],
+                        aktivTamadoBonusz: 0,
+                        befolyasPont: 0
+                    };
+                }
+
+                this.jatekosok = [this.j1, this.j2];
+                this.aktualisJatekos = this.j1;
+                this.teruletek = {};
+                this.kivalasztottTerulet = null;
+                this.hoveredTerulet = null;
+                this.fegyverszunetAktiv = false;
+                this.kor = 1;
+                this.aiFolyamatban = false;
+                this.pendingSabotageCardIdx = null;
+                this.elfoglaltTeruletekEbbenAKorben = 0;
+                this.particles = [];
+                this.ripples = [];
+
+                // Területek véletlenszerű elosztása
+                const nevek = Object.keys(TERULETEK_ALAP);
+                for (let i = nevek.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [nevek[i], nevek[j]] = [nevek[j], nevek[i]];
+                }
+
+                nevek.forEach((nev, idx) => {
+                    const tulaj = this.jatekosok[idx % 2];
+                    const adat = TERULETEK_ALAP[nev];
+                    this.teruletek[nev] = {
+                        tulaj,
+                        egysegek: 3,
+                        x: adat.x,
+                        y: adat.y,
+                        szomszedok: [...adat.szomszedok],
+                        bevetel: adat.bevetel
+                    };
+                });
+
+                document.getElementById('log-box').innerHTML = '';
+                document.getElementById('sabotage-banner').classList.add('hidden');
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('victory-modal').classList.add('hidden');
+                document.getElementById('game-screen').classList.remove('hidden');
+
+                this.resizeCanvas();
+                this.startTurn();
+            }
+
+            restartCurrentMode() {
+                ui.closeModal('victory-modal');
+                this.startGame(this.jatekMod);
+            }
+
+            returnToMenu() {
+                this.aiFolyamatban = false;
+                ui.closeModal('victory-modal');
+                document.getElementById('handoff-overlay').classList.add('hidden');
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('main-menu').classList.remove('hidden');
+            }
+
+            log(szoveg) {
+                const logBox = document.getElementById('log-box');
+                const entry = document.createElement('div');
+                entry.className = 'border-b border-[#5c4938]/40 pb-1.5 whitespace-pre-line leading-relaxed';
+                entry.textContent = szoveg;
+                logBox.appendChild(entry);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+
+            // ==================== TÉRKÉP RAJZOLÁSA ====================
+            drawMap() {
+                if (!this.ctx || !this.canvas.width) return;
+                const ctx = this.ctx;
+                const dpr = window.devicePixelRatio || 1;
+                const w = this.canvas.width / dpr;
+                const h = this.canvas.height / dpr;
+
+                ctx.clearRect(0, 0, w, h);
+
+                // 1. Mélytengeri antik háttér radiális gradienssel
+                const oceanGrad = ctx.createRadialGradient(w * 0.45, h * 0.45, 30, w * 0.5, h * 0.5, Math.max(w, h) * 0.78);
+                oceanGrad.addColorStop(0, '#1e3a52');
+                oceanGrad.addColorStop(0.55, '#13273a');
+                oceanGrad.addColorStop(1, '#0a1520');
+                ctx.fillStyle = oceanGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                // 2. Tengerészeti szélességi / hosszúsági fokháló
+                ctx.save();
+                ctx.strokeStyle = 'rgba(212, 175, 55, 0.08)';
+                ctx.lineWidth = 1;
+                const gridStep = 48;
+                for (let gx = (this.offsetX % gridStep); gx < w; gx += gridStep) {
+                    ctx.beginPath();
+                    ctx.moveTo(gx, 0);
+                    ctx.lineTo(gx, h);
+                    ctx.stroke();
+                }
+                for (let gy = (this.offsetY % gridStep); gy < h; gy += gridStep) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, gy);
+                    ctx.lineTo(w, gy);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // 3. Virtuális térkép koordinátatér (850x520)
+                ctx.save();
+                ctx.translate(this.offsetX, this.offsetY);
+                ctx.scale(this.scale, this.scale);
+
+                this.drawLandmasses(ctx);
+                this.drawTerrainFeatures(ctx);
+                this.drawSeaLabelsAndRoutes(ctx);
+                this.drawCompassRose(ctx, 82, 475);
+                this.drawConnections(ctx);
+                this.drawTerritories(ctx);
+                this.drawEffects(ctx);
+
+                ctx.restore();
+
+                // 4. Díszes külső térképkeret
+                this.drawMapFrame(ctx, w, h);
+            }
+
+            drawLandmasses(ctx) {
+                const continents = [
+                    // Kontinentális Európa (Ibéria, Franciaország, Skandinávia, Itália, Balkán, Kelet-Európa)
+                    [
+                        [58, 432], [52, 378], [118, 355], [142, 312], [218, 285],
+                        [215, 225], [262, 195], [282, 155], [322, 145], [348, 128],
+                        [368, 72], [412, 32], [468, 28], [488, 65], [455, 112],
+                        [465, 138], [525, 125], [585, 78], [675, 42], [795, 45],
+                        [815, 245], [805, 435], [645, 432], [615, 365], [568, 358],
+                        [602, 422], [565, 435], [538, 385], [472, 335], [428, 365],
+                        [412, 418], [382, 425], [348, 382], [312, 325], [242, 322],
+                        [182, 385], [145, 435], [85, 442]
+                    ],
+                    // Nagy-Britannia
+                    [
+                        [152, 175], [148, 142], [168, 102], [196, 98],
+                        [208, 132], [215, 168], [182, 182]
+                    ],
+                    // Írország
+                    [
+                        [76, 168], [74, 136], [104, 126], [122, 148], [112, 174]
+                    ],
+                    // Korzika és Szardínia
+                    [
+                        [316, 356], [332, 354], [334, 396], [314, 398]
+                    ],
+                    // Szicília
+                    [
+                        [372, 430], [398, 428], [392, 446]
+                    ]
+                ];
+
+                ctx.save();
+                for (const poly of continents) {
+                    // Part menti hullámgyűrűk (sekély tenger)
+                    ctx.beginPath();
+                    poly.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+                    ctx.closePath();
+                    ctx.lineJoin = 'round';
+                    ctx.strokeStyle = 'rgba(125, 211, 252, 0.14)';
+                    ctx.lineWidth = 18;
+                    ctx.stroke();
+
+                    ctx.strokeStyle = 'rgba(186, 230, 253, 0.22)';
+                    ctx.lineWidth = 8;
+                    ctx.stroke();
+
+                    // Szárazföld árnyék
+                    ctx.save();
+                    ctx.translate(4, 6);
+                    ctx.fillStyle = 'rgba(5, 12, 20, 0.55)';
+                    ctx.fill();
+                    ctx.restore();
+
+                    // Pergamen szárazföld kitöltés
+                    ctx.fillStyle = this.parchmentPattern || '#d9c7a3';
+                    ctx.fill();
+
+                    // Meleg belső szegély és sötét partvonal
+                    ctx.strokeStyle = 'rgba(120, 83, 44, 0.45)';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+
+                    ctx.strokeStyle = '#4a3520';
+                    ctx.lineWidth = 1.8;
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            drawTerrainFeatures(ctx) {
+                ctx.save();
+
+                // Tengerparti domborzati árnyékolás (sziklás partok és belső táj)
+                const hills = [
+                    [235, 315, 38], [460, 295, 45], [645, 250, 55], [135, 375, 32], [530, 160, 40]
+                ];
+                for (const [hx, hy, hr] of hills) {
+                    const hillGrad = ctx.createRadialGradient(hx, hy, 4, hx, hy, hr);
+                    hillGrad.addColorStop(0, 'rgba(139, 105, 62, 0.22)');
+                    hillGrad.addColorStop(1, 'rgba(139, 105, 62, 0)');
+                    ctx.fillStyle = hillGrad;
+                    ctx.beginPath();
+                    ctx.arc(hx, hy, hr, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Folyók (Rajna, Duna, Volga, Szajna)
+                const rivers = [
+                    [[292, 255], [285, 218], [278, 178]],
+                    [[265, 275], [242, 255], [222, 232]],
+                    [[375, 265], [445, 272], [525, 305], [618, 325]],
+                    [[675, 85], [705, 145], [735, 215], [765, 295]]
+                ];
+                ctx.strokeStyle = 'rgba(46, 118, 166, 0.56)';
+                ctx.lineWidth = 2.6;
+                ctx.lineCap = 'round';
+                for (const river of rivers) {
+                    ctx.beginPath();
+                    river.forEach(([x, y], idx) => {
+                        if (idx === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    });
+                    ctx.stroke();
+                }
+
+                // Hegyláncok (Alpok, Kárpátok, Pireneusok, Skandináv-hegység)
+                const mountains = [
+                    [318, 305], [334, 298], [350, 302], [366, 296], [382, 304], // Alpok
+                    [518, 228], [536, 232], [552, 244], [562, 260],             // Kárpátok
+                    [175, 344], [192, 342], [208, 346],                         // Pireneusok
+                    [395, 82],  [408, 66],  [424, 54]                           // Skandinávia
+                ];
+                for (const [mx, my] of mountains) {
+                    ctx.fillStyle = 'rgba(102, 76, 50, 0.6)';
+                    ctx.beginPath();
+                    ctx.moveTo(mx - 8.5, my + 5.5);
+                    ctx.lineTo(mx, my - 7.5);
+                    ctx.lineTo(mx + 8.5, my + 5.5);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Hófödte csúcs
+                    ctx.fillStyle = 'rgba(255, 252, 245, 0.8)';
+                    ctx.beginPath();
+                    ctx.moveTo(mx - 3.2, my - 2);
+                    ctx.lineTo(mx, my - 7.5);
+                    ctx.lineTo(mx + 3.2, my - 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Erdőségek (apró fenyőcsoportok)
+                const forests = [
+                    [345, 195], [465, 165], [615, 155], [635, 195], [440, 102], [235, 242], [585, 115]
+                ];
+                ctx.fillStyle = 'rgba(52, 88, 46, 0.48)';
+                for (const [fx, fy] of forests) {
+                    for (const [dx, dy] of [[-5, 2], [4, 3], [0, -4]]) {
+                        ctx.beginPath();
+                        ctx.moveTo(fx + dx - 3.5, fy + dy + 4);
+                        ctx.lineTo(fx + dx, fy + dy - 4);
+                        ctx.lineTo(fx + dx + 3.5, fy + dy + 4);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+
+                ctx.restore();
+            }
+
+            drawSeaLabelsAndRoutes(ctx) {
+                ctx.save();
+
+                // Animált tengeri hajózási útvonalak
+                const seaRoutes = [
+                    [[80, 365], [115, 275], [165, 185]], // Atlanti útvonal
+                    [[220, 425], [305, 435], [465, 420]], // Földközi-tengeri útvonal
+                    [[225, 130], [310, 115], [385, 95]]   // Északi-tengeri útvonal
+                ];
+                ctx.strokeStyle = 'rgba(243, 229, 171, 0.22)';
+                ctx.lineWidth = 1.4;
+                ctx.setLineDash([4, 6]);
+                ctx.lineDashOffset = -this.animTime * 10;
+                for (const route of seaRoutes) {
+                    ctx.beginPath();
+                    ctx.moveTo(route[0][0], route[0][1]);
+                    ctx.quadraticCurveTo(route[1][0], route[1][1], route[2][0], route[2][1]);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+
+                // Antik latin / történelmi tengerfeliratok
+                ctx.fillStyle = 'rgba(212, 175, 55, 0.28)';
+                ctx.font = 'italic 600 11px Cinzel, Georgia, serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('MARE ATLANTICUM', 78, 265);
+                ctx.fillText('MARE INTERNUM', 285, 452);
+                ctx.fillText('MARE BALTICUM', 485, 112);
+
+                ctx.restore();
+            }
+
+            drawCompassRose(ctx, cx, cy) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                const pulse = Math.sin(this.animTime * 1.5) * 0.04;
+                ctx.rotate(pulse);
+
+                // Külső körök
+                ctx.strokeStyle = 'rgba(212, 175, 55, 0.42)';
+                ctx.lineWidth = 1.4;
+                ctx.beginPath();
+                ctx.arc(0, 0, 28, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, 22, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // 4 fő égtáj tű
+                const dirs = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
+                for (const ang of dirs) {
+                    ctx.save();
+                    ctx.rotate(ang);
+                    ctx.fillStyle = '#d4af37';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -26);
+                    ctx.lineTo(4.5, -5);
+                    ctx.lineTo(0, 0);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.fillStyle = '#8c6d23';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -26);
+                    ctx.lineTo(-4.5, -5);
+                    ctx.lineTo(0, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                ctx.fillStyle = '#f3e5ab';
+                ctx.font = 'bold 9px Cinzel, Georgia, serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('É', 0, -31);
+                ctx.restore();
+            }
+
+            drawConnections(ctx) {
+                const rajzolt = new Set();
+                const isPeace = (this.kor === 1 || this.fegyverszunetAktiv);
+
+                for (const [nev, adat] of Object.entries(this.teruletek)) {
+                    for (const sz of adat.szomszedok) {
+                        const key = [nev, sz].sort().join('__');
+                        if (rajzolt.has(key)) continue;
+                        rajzolt.add(key);
+
+                        const szAdat = this.teruletek[sz];
+                        const isSelectedEdge = (this.kivalasztottTerulet === nev || this.kivalasztottTerulet === sz);
+                        const otherName = this.kivalasztottTerulet === nev ? sz : nev;
+                        const isAttackRoute = isSelectedEdge && !isPeace &&
+                            this.teruletek[otherName].tulaj !== this.aktualisJatekos;
+
+                        // Enyhe görbület az útvonalnak
+                        const mx = (adat.x + szAdat.x) / 2;
+                        const my = (adat.y + szAdat.y) / 2;
+                        const dx = szAdat.x - adat.x;
+                        const dy = szAdat.y - adat.y;
+                        const cpx = mx - dy * 0.08;
+                        const cpy = my + dx * 0.08;
+
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(adat.x, adat.y);
+                        ctx.quadraticCurveTo(cpx, cpy, szAdat.x, szAdat.y);
+
+                        if (isAttackRoute) {
+                            ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+                            ctx.lineWidth = 8;
+                            ctx.stroke();
+
+                            ctx.strokeStyle = '#f87171';
+                            ctx.lineWidth = 3.2;
+                            ctx.setLineDash([8, 6]);
+                            ctx.lineDashOffset = -this.animTime * 28;
+                            ctx.stroke();
+                        } else if (isSelectedEdge) {
+                            ctx.strokeStyle = 'rgba(245, 158, 11, 0.75)';
+                            ctx.lineWidth = 3.5;
+                            ctx.stroke();
+                        } else {
+                            ctx.strokeStyle = 'rgba(74, 53, 32, 0.48)';
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([5, 5]);
+                            ctx.stroke();
+                        }
+                        ctx.restore();
+                    }
+                }
+            }
+
+            drawTerritories(ctx) {
+                const isPeace = (this.kor === 1 || this.fegyverszunetAktiv);
+                const limitReached = (this.elfoglaltTeruletekEbbenAKorben >= this.maxHoditasKoronkent);
+
+                for (const [nev, adat] of Object.entries(this.teruletek)) {
+                    const { x, y } = adat;
+                    const isSelected = (nev === this.kivalasztottTerulet);
+                    const isHovered = (nev === this.hoveredTerulet);
+                    const isAttackable = !isPeace && !limitReached && this.kivalasztottTerulet &&
+                        this.teruletek[this.kivalasztottTerulet].szomszedok.includes(nev) &&
+                        adat.tulaj !== this.aktualisJatekos;
+                    const isSabotageTarget = (this.pendingSabotageCardIdx !== null) &&
+                        adat.tulaj !== this.aktualisJatekos;
+                    const isCapital = adat.bevetel >= 3;
+
+                    const r = isSelected ? 33 : (isHovered ? 31.5 : 30);
+
+                    ctx.save();
+
+                    // Célpont vagy kiválasztott terület pulzáló fényudvara
+                    if (isSelected || isAttackable || isSabotageTarget) {
+                        const pulseR = r + 6 + Math.sin(this.animTime * 4.5) * 3;
+                        ctx.beginPath();
+                        ctx.arc(x, y, pulseR, 0, Math.PI * 2);
+                        ctx.strokeStyle = isSabotageTarget
+                            ? 'rgba(192, 132, 252, 0.85)'
+                            : (isAttackable ? 'rgba(248, 113, 113, 0.85)' : 'rgba(251, 191, 36, 0.9)');
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    }
+
+                    // Korong árnyék
+                    ctx.beginPath();
+                    ctx.arc(x + 3, y + 5, r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
+                    ctx.fill();
+
+                    // 3D zománc gradiens (kék vagy vörös birodalom)
+                    const isBlue = (adat.tulaj === this.j1);
+                    const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.35, 3, x, y, r);
+                    if (isBlue) {
+                        grad.addColorStop(0, '#60a5fa');
+                        grad.addColorStop(0.55, '#2563eb');
+                        grad.addColorStop(1, '#172554');
+                    } else {
+                        grad.addColorStop(0, '#f87171');
+                        grad.addColorStop(0.55, '#dc2626');
+                        grad.addColorStop(1, '#450a0a');
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // Arany / kiemelt külső gyűrű
+                    ctx.lineWidth = isSelected ? 4 : 2.6;
+                    ctx.strokeStyle = isSelected ? '#fde047' : (isHovered ? '#ffffff' : '#e6c27a');
+                    ctx.stroke();
+
+                    // Belső díszgyűrű
+                    ctx.beginPath();
+                    ctx.arc(x, y, r - 4, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Gazdag főváros / nagyhatalmi régió korona jelvény a korong tetején
+                    if (isCapital) {
+                        ctx.fillStyle = '#fde047';
+                        ctx.strokeStyle = '#451a03';
+                        ctx.lineWidth = 1.2;
+                        ctx.beginPath();
+                        ctx.arc(x, y - r + 1, 7.5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#451a03';
+                        ctx.font = 'bold 9px Inter, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('★', x, y - r + 1.5);
+                    }
+
+                    // Egységek száma és bevétel
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 13px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`🪖 ${adat.egysegek}`, x, y - 4);
+
+                    ctx.fillStyle = '#fef08a';
+                    ctx.font = 'bold 10px Inter, sans-serif';
+                    ctx.fillText(`+${adat.bevetel}💰`, x, y + 12);
+
+                    // Pergamen-szalag névtábla a korong alatt
+                    ctx.font = 'bold 9.5px Inter, sans-serif';
+                    const textW = ctx.measureText(nev).width;
+                    const boxW = Math.max(58, textW + 14);
+                    const boxH = 17;
+                    const bx = x - boxW / 2;
+                    const by = y + r + 4;
+
+                    ctx.fillStyle = 'rgba(18, 13, 10, 0.94)';
+                    ctx.strokeStyle = isSelected ? '#fde047' : '#b8963e';
+                    ctx.lineWidth = 1.4;
+                    ctx.beginPath();
+                    ctx.roundRect(bx, by, boxW, boxH, 5);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#fef3c7';
+                    ctx.fillText(nev, x, by + boxH / 2 + 0.5);
+
+                    ctx.restore();
+                }
+            }
+
+            drawEffects(ctx) {
+                ctx.save();
+                for (const r of this.ripples) {
+                    ctx.beginPath();
+                    ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = r.color;
+                    ctx.globalAlpha = Math.max(0, r.alpha);
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                for (const p of this.particles) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = Math.max(0, p.life);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            drawMapFrame(ctx, w, h) {
+                ctx.save();
+                // Finom belső arany keretvonal
+                const pad = 7;
+                ctx.strokeStyle = 'rgba(212, 175, 55, 0.42)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(pad, pad, w - pad * 2, h - pad * 2);
+
+                // Díszes sarokvasalatok
+                const cornerLen = 18;
+                ctx.strokeStyle = '#d4af37';
+                ctx.lineWidth = 2.5;
+                const corners = [
+                    [pad, pad, 1, 1],
+                    [w - pad, pad, -1, 1],
+                    [pad, h - pad, 1, -1],
+                    [w - pad, h - pad, -1, -1]
+                ];
+                for (const [cx, cy, dx, dy] of corners) {
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy + dy * cornerLen);
+                    ctx.lineTo(cx, cy);
+                    ctx.lineTo(cx + dx * cornerLen, cy);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // ==================== UI FRISSÍTÉS ====================
+            updateUI() {
+                const j = this.aktualisJatekos;
+                const isPeace = (this.kor === 1 || this.fegyverszunetAktiv);
+
+                document.getElementById('lbl-kor').textContent = isPeace
+                    ? `${this.kor}. KÖR (Fegyverszünet)`
+                    : `${this.kor}. KÖR`;
+
+                const lblSoron = document.getElementById('lbl-soron');
+                lblSoron.textContent = `Soron van: ${j.nev}`;
+                lblSoron.style.color = j.vilagosSzin;
+
+                document.getElementById('lbl-arany').textContent = `💰 Kincstár: ${j.arany}`;
+                document.getElementById('lbl-befolyas').textContent = `🌟 Befolyás: ${j.befolyasPont}`;
+
+                const lblHoditas = document.getElementById('lbl-hoditas');
+                lblHoditas.textContent = `⚔️ Hódítás: ${this.elfoglaltTeruletekEbbenAKorben}/${this.maxHoditasKoronkent}`;
+                if (this.elfoglaltTeruletekEbbenAKorben >= this.maxHoditasKoronkent) {
+                    lblHoditas.className = 'text-amber-300 bg-[#3b2313] px-2.5 py-1 rounded-lg border border-amber-400/50';
+                } else {
+                    lblHoditas.className = 'text-rose-300 bg-[#2d1518] px-2.5 py-1 rounded-lg border border-rose-400/30';
+                }
+
+                const j1Db = Object.values(this.teruletek).filter(t => t.tulaj === this.j1).length;
+                const j2Db = Object.values(this.teruletek).filter(t => t.tulaj === this.j2).length;
+                document.getElementById('lbl-terulet-stat').textContent =
+                    `🔵 ${this.j1.rovidNev}: ${j1Db} | 🔴 ${this.j2.rovidNev}: ${j2Db} (Összesen: 15)`;
+
+                const lblKiv = document.getElementById('lbl-kivalasztott');
+                if (this.kivalasztottTerulet) {
+                    const adat = this.teruletek[this.kivalasztottTerulet];
+                    lblKiv.textContent = `📍 ${this.kivalasztottTerulet} (${adat.egysegek} egység | +${adat.bevetel}💰)`;
+                } else {
+                    lblKiv.textContent = '📍 Kiválasztva: Nincs';
+                }
+
+                const lblUtasitas = document.getElementById('lbl-utasitas');
+                const mobileHint = document.getElementById('mobile-hint');
+                if (this.pendingSabotageCardIdx !== null) {
+                    lblUtasitas.textContent = 'Szabotázs mód: válassz ellenséges területet!';
+                    mobileHint.textContent = '💥 Kattints egy ellenséges területre a szabotázshoz!';
+                } else if (isPeace) {
+                    lblUtasitas.textContent = 'Fegyverszünet érvényben (Támadni tilos)';
+                    mobileHint.textContent = '🕊️ Fegyverszünet: toborozz, húzz kártyát vagy diplomáciázz!';
+                } else if (this.elfoglaltTeruletekEbbenAKorben >= this.maxHoditasKoronkent) {
+                    lblUtasitas.textContent = 'Elérted a körönkénti 3 hódítási limitet!';
+                    mobileHint.textContent = '🛑 Max. 3 terület foglalható el egy körben — toborozz vagy fejezd be a kört!';
+                } else if (this.kivalasztottTerulet) {
+                    lblUtasitas.textContent = `${this.kivalasztottTerulet} kiválasztva. Támadj szomszédot vagy toborozz!`;
+                    mobileHint.textContent = `⚔️ Kattints egy szomszédos ellenséges területre a támadáshoz!`;
+                } else {
+                    lblUtasitas.textContent = 'Kattints egy saját területre!';
+                    mobileHint.textContent = 'Kattints egy saját területre a kiválasztáshoz!';
+                }
+
+                const lblBuffs = document.getElementById('lbl-active-buffs');
+                lblBuffs.textContent = j.aktivTamadoBonusz > 0
+                    ? `⚔️ Aktív támadó bónusz: +${j.aktivTamadoBonusz}`
+                    : '';
+
+                // Gombok állapota AI kör alatt
+                const disableControls = j.isAi || this.aiFolyamatban;
+                ['btn-toboroz', 'btn-huzas', 'btn-diplomacia', 'btn-tamogatas', 'btn-atadas', 'btn-kov-kor'].forEach(id => {
+                    document.getElementById(id).disabled = disableControls;
+                });
+
+                this.renderCards();
+                this.drawMap();
+            }
+
+            renderCards() {
+                const container = document.getElementById('cards-container');
+                container.innerHTML = '';
+                const j = this.aktualisJatekos;
+
+                if (j.isAi) {
+                    container.innerHTML = `<div class="col-span-full text-center text-xs italic text-[#8c7a65] py-5">🤖 Az AI haditanácsa ülésezik...</div>`;
+                    return;
+                }
+
+                if (!j.kartyak.length) {
+                    container.innerHTML = `<div class="col-span-full text-center text-xs italic text-[#8c7a65] py-5">Nincs kártya a kezedben. Húzz egyet 3 aranyért!</div>`;
+                    return;
+                }
+
+                const colorMap = {
+                    tamadas: 'from-[#6b1d1e] to-[#8a2627] border-red-400/50',
+                    vedekezes: 'from-[#1e4057] to-[#295775] border-sky-400/50',
+                    gazdasag: 'from-[#755814] to-[#96711b] border-amber-400/50',
+                    toborzas: 'from-[#1f472a] to-[#2b613a] border-emerald-400/50',
+                    tomeges_toborzas: 'from-[#1f472a] to-[#2b613a] border-emerald-400/50',
+                    szabotazs: 'from-[#41204f] to-[#592c6b] border-purple-400/50',
+                    mozgas: 'from-[#4f321c] to-[#6b4426] border-orange-400/50'
+                };
+
+                j.kartyak.forEach((k, idx) => {
+                    const bgClass = colorMap[k.tipus] || 'from-stone-700 to-stone-800 border-amber-500/40';
+                    const btn = document.createElement('button');
+                    btn.className = `card-item bg-gradient-to-br ${bgClass} border rounded-xl p-2.5 text-left flex flex-col justify-between shadow-lg cursor-pointer`;
+                    btn.onclick = () => this.playCard(idx);
+                    btn.innerHTML = `
+                        <div class="font-bold text-xs sm:text-sm text-[#fff8e7] flex items-center gap-1.5">
+                            <span class="text-base">${k.ikon}</span>
+                            <span class="truncate">${k.nev.toUpperCase()}</span>
+                        </div>
+                        <p class="text-[11px] text-amber-100/90 mt-1 leading-snug">${k.leiras}</p>
+                    `;
+                    container.appendChild(btn);
+                });
+            }
+
+            // ==================== TÉRKÉP INTERAKCIÓ ====================
+            handleMapClick(clickX, clickY) {
+                if (this.aktualisJatekos.isAi || this.aiFolyamatban) return;
+
+                const vx = (clickX - this.offsetX) / this.scale;
+                const vy = (clickY - this.offsetY) / this.scale;
+
+                let kattintott = null;
+                for (const [nev, adat] of Object.entries(this.teruletek)) {
+                    if (Math.hypot(vx - adat.x, vy - adat.y) <= 35) {
+                        kattintott = nev;
+                        break;
+                    }
+                }
+
+                // Szabotázs célpont választása
+                if (this.pendingSabotageCardIdx !== null) {
+                    if (!kattintott) {
+                        this.cancelSabotage();
+                        return;
+                    }
+                    if (this.teruletek[kattintott].tulaj === this.aktualisJatekos) {
+                        ui.toast("Saját területet nem szabotálhatsz! Válassz ellenséges régiót.", "warning");
+                        return;
+                    }
+                    this.executeSabotage(kattintott);
+                    return;
+                }
+
+                if (!kattintott) {
+                    this.kivalasztottTerulet = null;
+                    this.updateUI();
+                    return;
+                }
+
+                if (this.teruletek[kattintott].tulaj === this.aktualisJatekos) {
+                    this.kivalasztottTerulet = kattintott;
+                } else {
+                    if (this.kor === 1 || this.fegyverszunetAktiv) {
+                        ui.toast("Aktív fegyverszünet van érvényben, tilos a támadás!", "warning");
+                        return;
+                    }
+
+                    if (this.elfoglaltTeruletekEbbenAKorben >= this.maxHoditasKoronkent) {
+                        ui.toast(`Egy körben legfeljebb ${this.maxHoditasKoronkent} területet foglalhatsz el!`, "warning");
+                        return;
+                    }
+
+                    if (this.kivalasztottTerulet && this.teruletek[this.kivalasztottTerulet].szomszedok.includes(kattintott)) {
+                        this.attack(this.aktualisJatekos, this.kivalasztottTerulet, kattintott);
+                    } else {
+                        ui.toast("Válassz ki egy saját területet, amely határos ezzel!", "info");
+                    }
+                }
+
+                this.updateUI();
+            }
+
+            // ==================== JÁTÉKOS AKCIÓK ====================
+            recruit() {
+                if (this.aktualisJatekos.isAi || this.aiFolyamatban) return;
+                if (!this.kivalasztottTerulet) {
+                    ui.toast("Először kattints egy saját területre!", "warning");
+                    return;
+                }
+                if (this.aktualisJatekos.arany < 2) {
+                    ui.toast("A toborzáshoz legalább 2 arany szükséges!", "error");
+                    return;
+                }
+
+                this.aktualisJatekos.arany -= 2;
+                this.teruletek[this.kivalasztottTerulet].egysegek += 1;
+                this.log(`🪖 ${this.aktualisJatekos.rovidNev} toborzott itt: ${this.kivalasztottTerulet}.`);
+                this.updateUI();
+            }
+
+            drawCard() {
+                if (this.aktualisJatekos.isAi || this.aiFolyamatban) return;
+                if (this.aktualisJatekos.arany < 3) {
+                    ui.toast("Kártyahúzáshoz legalább 3 arany szükséges!", "error");
+                    return;
+                }
+                if (this.aktualisJatekos.kartyak.length >= 4) {
+                    ui.toast("Tele a kezed! Maximum 4 kártyád lehet egyszerre.", "warning");
+                    return;
+                }
+
+                this.aktualisJatekos.arany -= 3;
+                const sablon = KARTYA_PAKLI[Math.floor(Math.random() * KARTYA_PAKLI.length)];
+                const k = { ...sablon };
+                this.aktualisJatekos.kartyak.push(k);
+                this.log(`🃏 ${this.aktualisJatekos.rovidNev} húzott kártyát: [${k.nev}]`);
+                ui.toast(`Új kártya: ${k.ikon} ${k.nev}`, "success");
+                this.updateUI();
+            }
+
+            playCard(idx) {
+                if (this.aktualisJatekos.isAi || this.aiFolyamatban) return;
+                const k = this.aktualisJatekos.kartyak[idx];
+                if (!k) return;
+
+                if (k.tipus === 'vedekezes') {
+                    ui.toast("Ez egy védekező kártya — automatikusan aktiválódik, ha megtámadnak!", "info");
+                    return;
+                }
+
+                if ((k.tipus === 'toborzas' || k.tipus === 'mozgas') && !this.kivalasztottTerulet) {
+                    ui.toast("Először kattints a célterületre a térképen!", "warning");
+                    return;
+                }
+
+                if (k.tipus === 'szabotazs') {
+                    this.pendingSabotageCardIdx = idx;
+                    document.getElementById('sabotage-text').textContent = `${k.ikon} ${k.nev}: Kattints egy ellenséges területre!`;
+                    document.getElementById('sabotage-banner').classList.remove('hidden');
+                    this.updateUI();
+                    return;
+                }
+
+                this.aktualisJatekos.kartyak.splice(idx, 1);
+                this.log(`✨ ${this.aktualisJatekos.rovidNev} kijátszotta: [${k.nev}]!`);
+
+                if (k.tipus === 'tamadas') {
+                    this.aktualisJatekos.aktivTamadoBonusz += k.bonusz;
+                    ui.toast(`+${k.bonusz} támadóerő a következő csatához!`, "success");
+                } else if (k.tipus === 'gazdasag') {
+                    this.aktualisJatekos.arany += k.bonusz;
+                    ui.toast(`+${k.bonusz} arany került a kincstárba!`, "success");
+                } else if (k.tipus === 'toborzas') {
+                    this.teruletek[this.kivalasztottTerulet].egysegek += k.bonusz;
+                    ui.toast(`+${k.bonusz} egység érkezett ide: ${this.kivalasztottTerulet}!`, "success");
+                } else if (k.tipus === 'tomeges_toborzas') {
+                    for (const adat of Object.values(this.teruletek)) {
+                        if (adat.tulaj === this.aktualisJatekos) {
+                            adat.egysegek += 1;
+                        }
+                    }
+                    ui.toast("+1 egység minden saját területedre!", "success");
+                } else if (k.tipus === 'mozgas') {
+                    this.teruletek[this.kivalasztottTerulet].egysegek += k.bonusz;
+                    this.aktualisJatekos.aktivTamadoBonusz += 1;
+                    ui.toast(`+${k.bonusz} egység és +1 támadás bónusz!`, "success");
+                }
+
+                this.updateUI();
+            }
+
+            cancelSabotage() {
+                this.pendingSabotageCardIdx = null;
+                document.getElementById('sabotage-banner').classList.add('hidden');
+                this.updateUI();
+            }
+
+            executeSabotage(celTeruletNev) {
+                const idx = this.pendingSabotageCardIdx;
+                const k = this.aktualisJatekos.kartyak[idx];
+                this.aktualisJatekos.kartyak.splice(idx, 1);
+                this.pendingSabotageCardIdx = null;
+                document.getElementById('sabotage-banner').classList.add('hidden');
+
+                const cel = this.teruletek[celTeruletNev];
+                const veszteseg = Math.min(cel.egysegek - 1, k.bonusz);
+                cel.egysegek = Math.max(1, cel.egysegek - k.bonusz);
+
+                this.spawnBattleEffect(cel.x, cel.y, 'sabotage');
+                this.log(`💥 ${this.aktualisJatekos.rovidNev} kijátszotta: [${k.nev}] ➔ ${celTeruletNev} (-${veszteseg} egység)!`);
+                ui.toast(`Szabotázs sikeres! ${celTeruletNev} veszített ${veszteseg} egységet.`, "success");
+                this.updateUI();
+            }
+
+            // ==================== DIPLOMÁCIA ÉS ÁTADÁS ====================
+            requestTruce() {
+                if (this.aktualisJatekos.isAi || this.aiFolyamatban) return;
+                if (this.kor === 1 || this.fegyverszunetAktiv) {
+                    ui.toast("Ebben a körben már aktív a fegyverszünet!", "info");
+                    return;
+                }
+
+                const masik = this.aktualisJatekos === this.j1 ? this.j2 : this.j1;
+                ui.confirm(
+                    "🕊️ Fegyverszünet kérése",
+                    `Fegyverszünetet kérsz ${masik.nev} ellenféltől erre a körre? (Elfogadás esetén +1 befolyás pont)`,
+                    () => {
+                        if (masik.isAi) {
+                            if (Math.random() < 0.66) {
+                                this.fegyverszunetAktiv = true;
+                                this.aktualisJatekos.befolyasPont += 1;
+                                this.log(`🕊️ Az AI elfogadta a fegyverszünetet! (+1 befolyás)`);
+                                ui.toast("Béke van erre a körre! (+1 🌟)", "success");
+                            } else {
+                                this.log(`❌ Az AI elutasította a békét!`);
+                                ui.toast("Az ellenfél elutasította a fegyverszünetet!", "error");
+                            }
+                        } else {
+                            this.fegyverszunetAktiv = true;
+                            this.aktualisJatekos.befolyasPont += 1;
+                            this.log(`🕊️ Kölcsönös fegyverszünet lépett életbe! (+1 befolyás)`);
+                            ui.toast("A fegyverszünet érvényes erre a körre!", "success");
+                        }
+                        this.updateUI();
+                    }
+                );
+            }
+
+            giftGold() {
+                if (this.aktualisJatekos.isAi || this.aiFolyamatban) return;
+                if (this.aktualisJatekos.arany < 3) {
+                    ui.toast("Legalább 3 arany szükséges az ajándékozáshoz!", "warning");
+                    return;
+                }
+
+                const masik = this.aktualisJatekos === this.j1 ? this.j2 : this.j1;
+                ui.confirm(
+                    "💎 Arany ajándékozása",
+                    `Küldesz 3 aranyat ${masik.nev} részére?\nJutalmad: +2 befolyás pont (amely minden kör elején +2 arany kamatot hoz).`,
+                    () => {
+                        this.aktualisJatekos.arany -= 3;
+                        masik.arany += 3;
+                        this.aktualisJatekos.befolyasPont += 2;
+                        this.log(`💎 ${this.aktualisJatekos.rovidNev} átutalt 3 aranyat ${masik.rovidNev} részére! (+2 befolyás)`);
+                        ui.toast("Arany elküldve! (+2 🌟 Befolyás)", "success");
+                        this.updateUI();
+                    }
+                );
+            }
+
+            openTransferModal() {
+                if (this.aktualisJatekos.isAi || this.aiFolyamatban) return;
+                if (!this.kivalasztottTerulet) {
+                    ui.toast("Először kattints egy saját területre a térképen!", "warning");
+                    return;
+                }
+
+                const adat = this.teruletek[this.kivalasztottTerulet];
+                if (adat.egysegek <= 1) {
+                    ui.toast("A helyőrséget (1 sereg) nem adhatod át! Legalább 2 egység kell.", "warning");
+                    return;
+                }
+
+                document.getElementById('transfer-desc').textContent =
+                    `Kijelölt terület: ${this.kivalasztottTerulet} (${adat.egysegek} egység). Válassz műveletet:`;
+                ui.openModal('transfer-modal');
+            }
+
+            executeTransfer(mode) {
+                ui.closeModal('transfer-modal');
+                if (!this.kivalasztottTerulet) return;
+
+                const masik = this.aktualisJatekos === this.j1 ? this.j2 : this.j1;
+                const adat = this.teruletek[this.kivalasztottTerulet];
+
+                if (mode === 'territory') {
+                    const sajatDb = Object.values(this.teruletek).filter(t => t.tulaj === this.aktualisJatekos).length;
+                    if (sajatDb <= 1) {
+                        ui.toast("Az utolsó területedet nem adhatod át!", "error");
+                        return;
+                    }
+                    const nev = this.kivalasztottTerulet;
+                    adat.tulaj = masik;
+                    this.aktualisJatekos.befolyasPont += 3;
+                    this.log(`🤝 Átadott terület (${nev}) ${masik.rovidNev} részére! (+3 befolyás)`);
+                    ui.toast(`${nev} átadva! (+3 🌟 Befolyás)`, "success");
+                    this.kivalasztottTerulet = null;
+                    this.updateUI();
+                    this.checkVictory();
+                } else if (mode === 'troop') {
+                    const szovetsegesSzomszedok = adat.szomszedok.filter(sz => this.teruletek[sz].tulaj === masik);
+                    if (!szovetsegesSzomszedok.length) {
+                        ui.toast("Nincs szomszédos ellenfél terület, ahová sereget küldhetnél!", "warning");
+                        return;
+                    }
+                    const celNev = szovetsegesSzomszedok[0];
+                    adat.egysegek -= 1;
+                    this.teruletek[celNev].egysegek += 1;
+                    this.aktualisJatekos.befolyasPont += 1;
+                    this.log(`🪖 1 sereg küldve innen: ${this.kivalasztottTerulet} ➔ ${celNev}! (+1 befolyás)`);
+                    ui.toast(`Sereg elküldve (${celNev})! (+1 🌟 Befolyás)`, "success");
+                    this.updateUI();
+                }
+            }
+
+            // ==================== CSATARENDSZER ====================
+            attack(tamadoJ, honnan, hova) {
+                if (this.elfoglaltTeruletekEbbenAKorben >= this.maxHoditasKoronkent) {
+                    if (!tamadoJ.isAi) {
+                        ui.toast(`Egy körben legfeljebb ${this.maxHoditasKoronkent} területet foglalhatsz el!`, "warning");
+                    }
+                    return;
+                }
+
+                const forras = this.teruletek[honnan];
+                const celpont = this.teruletek[hova];
+                const vedoJ = celpont.tulaj;
+
+                if (forras.egysegek < 2) {
+                    if (!tamadoJ.isAi) {
+                        ui.toast("Legalább 2 egység szükséges a támadáshoz (1 helyőrség marad)!", "warning");
+                    }
+                    return;
+                }
+
+                const tSereg = forras.egysegek - 1;
+                const vSereg = celpont.egysegek;
+
+                // Automatikus védekező kártya keresése
+                let vedoBonusz = 0;
+                const defIdx = vedoJ.kartyak.findIndex(k => k.tipus === 'vedekezes');
+                if (defIdx !== -1) {
+                    const defCard = vedoJ.kartyak.splice(defIdx, 1)[0];
+                    vedoBonusz = defCard.bonusz;
+                    this.log(`🛡️ ${vedoJ.rovidNev} védekező kártyája aktiválódott: [${defCard.nev}] (+${vedoBonusz})!`);
+                }
+
+                const tDobas = Math.floor(Math.random() * 6) + 1;
+                const vDobas = Math.floor(Math.random() * 6) + 1;
+                const tEro = tSereg + tDobas + tamadoJ.aktivTamadoBonusz;
+                const vEro = vSereg + vDobas + vedoBonusz;
+                tamadoJ.aktivTamadoBonusz = 0;
+
+                // Vizuális csata effekt a célterületen
+                this.spawnBattleEffect(celpont.x, celpont.y, 'battle');
+
+                const alapSzoveg = `⚔️ CSATA: ${honnan} ➔ ${hova} (${tamadoJ.rovidNev} vs ${vedoJ.rovidNev})\nTámadó erő: ${tEro} (🎲${tDobas}) | Védekező erő: ${vEro} (🎲${vDobas})`;
+
+                if (tEro > vEro) {
+                    const maxVeszteseg = Math.max(1, Math.floor(vSereg / 2));
+                    const megmaradt = Math.max(1, tSereg - Math.floor(Math.random() * (maxVeszteseg + 1)));
+                    forras.egysegek = 1;
+                    celpont.tulaj = tamadoJ;
+                    celpont.egysegek = megmaradt;
+                    this.elfoglaltTeruletekEbbenAKorben += 1;
+                    if (!tamadoJ.isAi) {
+                        this.kivalasztottTerulet = hova;
+                        const hatralevo = this.maxHoditasKoronkent - this.elfoglaltTeruletekEbbenAKorben;
+                        ui.toast(`🏆 Győzelem! Elfoglaltad: ${hova}! (Még ${hatralevo} hódítás maradt)`, "success");
+                    }
+                    this.log(`${alapSzoveg}\n🏆 GYŐZELEM! Elfoglalva: ${hova}! (${this.elfoglaltTeruletekEbbenAKorben}/${this.maxHoditasKoronkent} hódítás)`);
+                } else {
+                    const maxVeszteseg = Math.max(1, Math.floor(tSereg / 2));
+                    forras.egysegek = 1;
+                    celpont.egysegek = Math.max(1, vSereg - Math.floor(Math.random() * (maxVeszteseg + 1)));
+                    if (!tamadoJ.isAi) {
+                        ui.toast(`💀 Vereség! ${hova} visszaverte a támadást.`, "error");
+                    }
+                    this.log(`${alapSzoveg}\n💀 VERESÉG! ${vedoJ.rovidNev} megvédte.`);
+                }
+
+                this.updateUI();
+                this.checkVictory();
+            }
+
+            // ==================== KÖRÖK ÉS AI LOGIKA ====================
+            startTurn() {
+                this.elfoglaltTeruletekEbbenAKorben = 0;
+                if (this.kor > 1) {
+                    this.fegyverszunetAktiv = false;
+                }
+
+                const bevetel = Object.values(this.teruletek)
+                    .filter(t => t.tulaj === this.aktualisJatekos)
+                    .reduce((sum, t) => sum + t.bevetel, 0);
+
+                const befolyasKamat = this.aktualisJatekos.befolyasPont;
+                this.aktualisJatekos.arany += bevetel + befolyasKamat;
+
+                const korSzoveg = (this.kor === 1 || this.fegyverszunetAktiv) ? " (Fegyverszünet érvényben!)" : "";
+                this.log(`👑 ${this.kor}. KÖR — ${this.aktualisJatekos.nev}${korSzoveg}\nAlap adó: +${bevetel} | Befolyási kamat: +${befolyasKamat} arany.`);
+
+                this.updateUI();
+
+                if (this.aktualisJatekos.isAi) {
+                    this.aiFolyamatban = true;
+                    this.updateUI();
+                    setTimeout(() => this.runAiTurn(), 850);
+                }
+            }
+
+            endTurn() {
+                if (this.aktualisJatekos.isAi || this.aiFolyamatban) return;
+                this.kivalasztottTerulet = null;
+                this.pendingSabotageCardIdx = null;
+                document.getElementById('sabotage-banner').classList.add('hidden');
+
+                if (this.jatekMod === 'ai') {
+                    this.aktualisJatekos = this.j2;
+                    this.startTurn();
+                } else {
+                    if (this.aktualisJatekos === this.j1) {
+                        this.aktualisJatekos = this.j2;
+                        this.showHandoff();
+                    } else {
+                        this.kor += 1;
+                        this.aktualisJatekos = this.j1;
+                        this.showHandoff();
+                    }
+                }
+            }
+
+            runAiTurn() {
+                const ai = this.j2;
+                this.log(`🤖 Az AI számítja a lépéseit...`);
+
+                if (this.kor === 1) {
+                    const sajat = Object.keys(this.teruletek).filter(t => this.teruletek[t].tulaj === ai);
+                    while (ai.arany >= 2 && sajat.length) {
+                        const cel = sajat[Math.floor(Math.random() * sajat.length)];
+                        this.teruletek[cel].egysegek += 1;
+                        ai.arany -= 2;
+                    }
+                    this.finishAiTurn();
+                    return;
+                }
+
+                // Fegyverszünet kezdeményezése néha
+                if (!this.fegyverszunetAktiv && Math.random() < 0.22) {
+                    this.fegyverszunetAktiv = true;
+                    ai.befolyasPont += 1;
+                    this.log(`🕊️ Az AI fegyverszünetet kezdeményezett!`);
+                }
+
+                // Kártyahúzás
+                if (ai.arany >= 5 && ai.kartyak.length < 4) {
+                    ai.arany -= 3;
+                    const sablon = KARTYA_PAKLI[Math.floor(Math.random() * KARTYA_PAKLI.length)];
+                    ai.kartyak.push({ ...sablon });
+                }
+
+                // Kártya kijátszása
+                const playableIdx = ai.kartyak.findIndex(k => k.tipus !== 'vedekezes');
+                if (playableIdx !== -1) {
+                    const k = ai.kartyak.splice(playableIdx, 1)[0];
+                    this.log(`🤖 AI kártyát használt: [${k.nev}]`);
+                    const sajat = Object.keys(this.teruletek).filter(t => this.teruletek[t].tulaj === ai);
+                    const ellenseg = Object.keys(this.teruletek).filter(t => this.teruletek[t].tulaj === this.j1);
+
+                    if (k.tipus === 'tamadas') ai.aktivTamadoBonusz += k.bonusz;
+                    else if (k.tipus === 'gazdasag') ai.arany += k.bonusz;
+                    else if (k.tipus === 'toborzas' && sajat.length) {
+                        this.teruletek[sajat[Math.floor(Math.random() * sajat.length)]].egysegek += k.bonusz;
+                    } else if (k.tipus === 'tomeges_toborzas') {
+                        sajat.forEach(t => this.teruletek[t].egysegek += 1);
+                    } else if (k.tipus === 'mozgas' && sajat.length) {
+                        this.teruletek[sajat[Math.floor(Math.random() * sajat.length)]].egysegek += k.bonusz;
+                        ai.aktivTamadoBonusz += 1;
+                    } else if (k.tipus === 'szabotazs' && ellenseg.length) {
+                        const celNev = ellenseg[Math.floor(Math.random() * ellenseg.length)];
+                        this.teruletek[celNev].egysegek = Math.max(1, this.teruletek[celNev].egysegek - k.bonusz);
+                        this.spawnBattleEffect(this.teruletek[celNev].x, this.teruletek[celNev].y, 'sabotage');
+                    }
+                }
+
+                // Toborzás
+                const sajat = Object.keys(this.teruletek).filter(t => this.teruletek[t].tulaj === ai);
+                while (ai.arany >= 2 && sajat.length) {
+                    const cel = sajat[Math.floor(Math.random() * sajat.length)];
+                    this.teruletek[cel].egysegek += 1;
+                    ai.arany -= 2;
+                }
+
+                // Támadások végrehajtása (max. 3 hódításig)
+                if (!this.fegyverszunetAktiv) {
+                    for (const honnan of sajat) {
+                        if (this.elfoglaltTeruletekEbbenAKorben >= this.maxHoditasKoronkent) break;
+                        if (this.teruletek[honnan].tulaj !== ai) continue;
+                        if (this.teruletek[honnan].egysegek >= 4) {
+                            for (const sz of this.teruletek[honnan].szomszedok) {
+                                if (this.elfoglaltTeruletekEbbenAKorben >= this.maxHoditasKoronkent) break;
+                                if (this.teruletek[sz].tulaj === this.j1 &&
+                                    this.teruletek[honnan].egysegek > this.teruletek[sz].egysegek) {
+                                    this.attack(ai, honnan, sz);
+                                    if (this.checkVictory()) {
+                                        this.aiFolyamatban = false;
+                                        return;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                this.finishAiTurn();
+            }
+
+            finishAiTurn() {
+                this.aiFolyamatban = false;
+                if (!this.checkVictory()) {
+                    this.kor += 1;
+                    this.aktualisJatekos = this.j1;
+                    this.startTurn();
+                }
+            }
+
+            showHandoff() {
+                const nameEl = document.getElementById('handoff-player-name');
+                nameEl.textContent = this.aktualisJatekos.nev;
+                nameEl.style.color = this.aktualisJatekos.vilagosSzin;
+                document.getElementById('handoff-overlay').classList.remove('hidden');
+            }
+
+            completeHandoff() {
+                document.getElementById('handoff-overlay').classList.add('hidden');
+                this.startTurn();
+            }
+
+            checkVictory() {
+                const osszes = Object.keys(this.teruletek).length;
+                for (const j of this.jatekosok) {
+                    const birtokolt = Object.values(this.teruletek).filter(t => t.tulaj === j).length;
+                    if (birtokolt === osszes) {
+                        this.updateUI();
+                        document.getElementById('victory-text').textContent =
+                            `🎉 ${j.nev} meghódította mind a ${osszes} európai régiót a(z) ${this.kor}. körben!`;
+                        ui.openModal('victory-modal');
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        // Játék indítása oldalbetöltéskor
+        let game;
+        window.addEventListener('DOMContentLoaded', () => {
+            game = new BirodalmakGame();
+        });
+    </script>
+</body>
+</html>
